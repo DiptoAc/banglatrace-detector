@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A privacy-first Bengali AI-text detection research prototype based on the thesis methodology.">
+  <title>BanglaTrace — Bengali AI Text Detector</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23102a43'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='40' fill='white'%3Eব%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="BanglaTrace home">
+      <span class="brand-mark" aria-hidden="true">ব</span>
+      <span><strong>BanglaTrace</strong><small>Research prototype</small></span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#detector">Detector</a>
+      <a href="#method">Method</a>
+      <a href="#limitations">Limitations</a>
+    </nav>
+    <span class="privacy-chip" id="header-mode-chip"><span aria-hidden="true">●</span> Private local mode</span>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Bengali authorship decision support</p>
+        <h1 id="hero-title">Check whether Bengali text resembles <span>AI-generated writing</span></h1>
+        <p class="hero-lead">Paste Bengali text to receive an AI-likelihood score, an uncertainty-aware verdict, and responsible review guidance. Choose private on-device analysis or stronger semantic analysis.</p>
+        <div class="hero-points" aria-label="Key features">
+          <span>বাংলা-aware features</span>
+          <span>Calibrated probability</span>
+          <span>No text storage</span>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Illustration of Bengali text analysis">
+        <div class="document-sheet">
+          <span class="sheet-tag">বাংলা</span>
+          <div class="bengali-lines">মানুষের লেখা নাকি কৃত্রিম বুদ্ধিমত্তা দ্বারা তৈরি?</div>
+          <div class="scan-line"></div>
+          <div class="signal-row"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="visual-badge"><strong>AI%</strong><span>evidence, not proof</span></div>
+      </div>
+    </section>
+
+    <section class="detector-section" id="detector" aria-labelledby="detector-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Interactive detector</p>
+          <h2 id="detector-title">Analyze a Bengali passage</h2>
+        </div>
+        <p>For the most stable signal, use 40–400 words—the document range used by the thesis preprocessing protocol.</p>
+      </div>
+
+      <div class="detector-grid">
+        <article class="input-card">
+          <div class="card-toolbar">
+            <label for="text-input">Bengali text</label>
+            <div class="toolbar-actions">
+              <button class="text-button" id="sample-button" type="button">Use sample</button>
+              <button class="text-button" id="clear-button" type="button">Clear</button>
+            </div>
+          </div>
+          <fieldset class="mode-switch" aria-label="Analysis mode">
+            <legend>Analysis mode</legend>
+            <button class="mode-option is-active" id="local-mode" type="button" data-mode="local" aria-pressed="true">
+              <span class="mode-icon" aria-hidden="true">L</span>
+              <span><strong>Private local</strong><small>Fast · text stays in this browser</small></span>
+            </button>
+            <button class="mode-option" id="advanced-mode" type="button" data-mode="advanced" aria-pressed="false" disabled>
+              <span class="mode-icon accent" aria-hidden="true">A</span>
+              <span><strong>Advanced semantic <em>Recommended</em></strong><small id="advanced-mode-copy">Requires the secure analysis service</small></span>
+            </button>
+          </fieldset>
+          <p class="mode-disclosure" id="mode-disclosure">Local mode does not transmit or store your text.</p>
+          <textarea id="text-input" spellcheck="false" maxlength="12000" placeholder="এখানে বাংলা লেখাটি পেস্ট করুন…" aria-describedby="input-guidance"></textarea>
+          <div class="input-meta" id="input-guidance">
+            <span><strong id="word-count">0</strong> words</span>
+            <span><strong id="char-count">0</strong> characters</span>
+            <span><strong id="bengali-ratio">0%</strong> Bengali script</span>
+          </div>
+          <div class="input-warning" id="input-warning" role="status" aria-live="polite"></div>
+          <button class="analyze-button" id="analyze-button" type="button" disabled>
+            <span>Analyze text</span><span aria-hidden="true">→</span>
+          </button>
+          <p class="privacy-note" id="privacy-note">The model and analysis run entirely in your browser. No submitted text is uploaded or retained.</p>
+        </article>
+
+        <article class="result-card" id="result-card" aria-live="polite">
+          <div class="empty-result" id="empty-result">
+            <div class="empty-orbit"><span>AI%</span></div>
+            <h3>Your result will appear here</h3>
+            <p>Enter enough Bengali text and select “Analyze text.”</p>
+          </div>
+
+          <div class="result-content" id="result-content" hidden>
+            <div class="score-layout">
+              <div class="score-ring" id="score-ring" style="--score: 0deg">
+                <div><strong id="score-value">0%</strong><span>AI likelihood</span></div>
+              </div>
+              <div class="verdict-block">
+                <span class="verdict-kicker" id="verdict-kicker">Result</span>
+                <h3 id="verdict-title">Uncertain</h3>
+                <p id="verdict-copy"></p>
+              </div>
+            </div>
+
+            <div class="probability-scale" aria-label="Probability scale from human-written to AI-generated">
+              <div class="scale-labels"><span>Human-like</span><span>Uncertain</span><span>AI-like</span></div>
+              <div class="scale-track"><span id="score-marker"></span></div>
+            </div>
+
+            <div class="score-breakdown" id="score-breakdown" hidden>
+              <div class="breakdown-heading"><strong>Signal breakdown</strong><span>Weighted ensemble</span></div>
+              <div class="breakdown-row"><span>Semantic</span><div><i id="semantic-bar"></i></div><strong id="semantic-score">—</strong></div>
+              <div class="breakdown-row"><span>Lexical</span><div><i id="lexical-bar"></i></div><strong id="lexical-score">—</strong></div>
+              <div class="breakdown-row final"><span>Combined</span><div><i id="combined-bar"></i></div><strong id="combined-score">—</strong></div>
+            </div>
+
+            <div class="feedback-box">
+              <h4>Review guidance</h4>
+              <ul id="feedback-list"></ul>
+            </div>
+
+            <div class="result-meta">
+              <span id="confidence-label">Confidence: —</span>
+              <span id="analysis-source">Private local analysis</span>
+              <span id="model-version">Model: loading…</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="method-section" id="method" aria-labelledby="method-title">
+      <div class="method-copy">
+        <p class="eyebrow">Method</p>
+        <h2 id="method-title">A hybrid detector designed for stronger generalization</h2>
+        <p>Private local mode uses normalized Bengali word and character patterns learned from the repository data. Advanced mode adds multilingual semantic review of discourse structure, formulaic progression, stylistic uniformity, and human idiosyncrasy.</p>
+        <p>The two independent signals are combined according to semantic confidence. This reduces reliance on exact phrases seen in the small training set and improves the assessment of polished, previously unseen model output.</p>
+      </div>
+      <div class="method-flow" aria-label="Detection process">
+        <div><span>01</span><strong>Normalize</strong><small>NFC, whitespace, URLs and email</small></div>
+        <div><span>02</span><strong>Local signal</strong><small>Word 1–2 and character 3–5 grams</small></div>
+        <div><span>03</span><strong>Semantic signal</strong><small>Discourse, style, consistency, and context</small></div>
+        <div><span>04</span><strong>Combine & review</strong><small>Confidence-weighted score and human guidance</small></div>
+      </div>
+    </section>
+
+    <section class="evidence-strip" aria-label="Research context">
+      <div><strong>6</strong><span>Writing domains in the thesis design</span></div>
+      <div><strong>12</strong><span>Generator families considered</span></div>
+      <div><strong>5000</strong><span>Labeled repository records used</span></div>
+      <div><strong>94.3%</strong><span>Validation macro F1</span></div>
+    </section>
+
+    <section class="limitations-section" id="limitations" aria-labelledby="limitations-title">
+      <div class="limitations-heading">
+        <p class="eyebrow">Responsible interpretation</p>
+        <h2 id="limitations-title">A detector score is not proof of authorship</h2>
+      </div>
+      <div class="limitations-list">
+        <article><span>01</span><div><h3>Editing changes the signal</h3><p>Human revision, translation, paraphrasing, or mixed human–LLM writing can reduce reliability.</p></div></article>
+        <article><span>02</span><div><h3>Short and code-mixed text is harder</h3><p>Informal spelling, Romanized Bengali, and Bengali–English mixing require cautious interpretation.</p></div></article>
+        <article><span>03</span><div><h3>Use contextual human review</h3><p>Do not accuse, penalize, or reject a person based only on this percentage. Review provenance and writing-process evidence.</p></div></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>BanglaTrace</strong><span>Thesis demonstration interface</span></div>
+    <p>Model output supports review; it does not determine authorship.</p>
+  </footer>
+</body>
+</html>
